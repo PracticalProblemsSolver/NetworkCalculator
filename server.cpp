@@ -25,7 +25,7 @@ void print_usage() {
  *
  *  \return  Returns -1 upon error.
  */
-int main(int argc, char *argv[]) {
+int main(int argc, char* argv[]) {
     if (argc != MIN_ARGS) {
         print_usage();
         return -1;
@@ -37,19 +37,26 @@ int main(int argc, char *argv[]) {
     adr.sin_family = AF_INET;
     adr.sin_addr.s_addr = htonl(INADDR_ANY);
     adr.sin_port = htons(port);
-    Bind(server, (const struct sockaddr *) &adr,
+    Bind(server, (const struct sockaddr*) &adr,
          sizeof adr);
     sockaddr_in new_adr{0};
     auto size = (socklen_t) sizeof(new_adr);
     listen(server, MAX_CONNECTIONS);
-    int new_socket = accept(server, (sockaddr *) &new_adr,
+    int new_socket = accept(server, (sockaddr*) &new_adr,
                             &size);
     if (new_socket < 0) {
         cout << "Error connecting with client" << endl;
         exit(-1);
     }
-    cout << "Client on " << inet_ntoa(new_adr.sin_addr)
-    << ":" << ntohs(new_adr.sin_port) << " connected" << endl;
+    cout << "Client connected on " << inet_ntoa(new_adr.sin_addr)
+         << ":" << ntohs(new_adr.sin_port) << endl;
+
+    string login = receive_string(new_socket);
+    cout << login << endl;
+
+    string password = receive_string(new_socket);
+    cout << password << endl;
+
     close(new_socket);
     close(server);
     return 0;
