@@ -5,18 +5,7 @@
 #include <unistd.h>
 #include "interactions.hpp"
 
-using namespace std;
 const int MIN_ARGS = 3;
-
-
-/*! \brief   Print usage function.
- *
- *  \details Prints usage for client CL arguments.
- */
-void print_usage() {
-    cout << "Usage: <IP-adress> <Port>" << endl;
-    cout << "Example: 127.0.0.1 8080" << endl;
-}
 
 /*! \brief   Client main function.
  *
@@ -30,7 +19,7 @@ void print_usage() {
  * */
 int main(int argc, char* argv[]) {
     if (argc != MIN_ARGS) {
-        print_usage();
+        std::cout << "Usage: <IP-adress> <Port>\nExample: 127.0.0.1 8080\n";
         return -1;
     }
     char* ip = argv[1];
@@ -45,24 +34,34 @@ int main(int argc, char* argv[]) {
     int client = Socket(AF_INET, SOCK_STREAM, NO_PROTOCOL);
     Connect(client, (sockaddr*) &adr,
             sizeof(adr));
-    cout << "Connected to server" << endl;
+    std::cout << "Connected to server\n";
 
-    cout << "Login:\n>";
-    string login;
-    getline(cin, login);
+    std::cout << "Login:\n>";
+    std::string login;
+    std::cin >> login;
     send_string(client, login);
 
-    cout << "Password:\n>";
-    string password;
-    getline(cin, password);
+    std::cout << "Password:\n>";
+    std::string password;
+    std::cin >> password;
     send_string(client, password);
 
-    cout << "Enter the command:" << endl;
-    string command;
-    while (TRUE) {
-        cout << ">";
-        getline(cin, command);
+    std::cout << "Enter the command:\n";
+    std::string command;
+    std::string calc_res;
+    while (true) {
+        std::cout << ">";
+        std::cin >> command;
         if (command == "logout") {
+            send_string(client, command);
+            break;
+        } else if (command == "calc") {
+            std::string expr;
+            std::cout << "Enter the expression to calculate:\n>";
+            std::cin >> expr;
+            send_string(client, expr);
+            calc_res = receive_string(client);
+            std::cout << calc_res << "\n";
             break;
         }
     }

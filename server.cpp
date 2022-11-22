@@ -5,19 +5,11 @@
 #include <cstdlib>
 #include <unistd.h>
 #include "interactions.hpp"
+#include "calc.hpp"
 
-using namespace std;
 const int MIN_ARGS = 2;
 const int MAX_CONNECTIONS = 10;
 
-/*! \brief   Print usage function.
- *
- *  \details Prints usage for client CL arguments.
- */
-void print_usage() {
-    cout << "Usage: <Port>" << endl;
-    cout << "Example: 8080" << endl;
-}
 
 /*! \brief   Server main function.
  *
@@ -27,7 +19,7 @@ void print_usage() {
  */
 int main(int argc, char* argv[]) {
     if (argc != MIN_ARGS) {
-        print_usage();
+        std::cout << "Usage: <Port>\nExample: 8080\n";
         return -1;
     }
     int port = atoi(argv[1]);
@@ -41,23 +33,35 @@ int main(int argc, char* argv[]) {
          sizeof adr);
     sockaddr_in new_adr{0};
     auto size = (socklen_t) sizeof(new_adr);
-    listen(server, MAX_CONNECTIONS);
-    int new_socket = accept(server, (sockaddr*) &new_adr,
+    int new_socket;
+    while (true) {
+        listen(server, MAX_CONNECTIONS);
+        new_socket = accept(server, (sockaddr*) &new_adr,
                             &size);
-    if (new_socket < 0) {
-        cout << "Error connecting with client" << endl;
-        exit(-1);
+        if (new_socket < 0) {
+            std::cout << "Error connecting with client\n";
+            exit(-1);
+        }
+        std::cout << "Client connected on " << inet_ntoa(new_adr.sin_addr)
+                  << ":" << ntohs(new_adr.sin_port) << "\n";
+
+        std::string login = receive_string(new_socket);
+        std::string password = receive_string(new_socket);
+        std::cout << login << " " << password << "\n";
+
+        std::string message;
+        std::string calc_res;
+        while (true) {
+            message = receive_string(new_socket);
+            if (message == "logout") {
+                close(new_socket);
+                break;
+            }
+            calc_res = std::to_string(calculate(message));
+            send_string(new_socket, calc_res);
+        }
+        break;
     }
-    cout << "Client connected on " << inet_ntoa(new_adr.sin_addr)
-         << ":" << ntohs(new_adr.sin_port) << endl;
-
-    string login = receive_string(new_socket);
-    cout << login << endl;
-
-    string password = receive_string(new_socket);
-    cout << password << endl;
-
-    close(new_socket);
     close(server);
     return 0;
 }

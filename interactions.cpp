@@ -1,8 +1,8 @@
 /*! \file    interactions.cpp
  *
- *  \brief   File with functions.
+ *  \brief   File with interaction functions.
  *
- *  \details Contains client-server functions.
+ *  \details Contains client-server interaction functions.
  */
 #include <sys/socket.h>
 #include <cstdio>
@@ -12,7 +12,6 @@
 #include "interactions.hpp"
 #include <string>
 
-using namespace std;
 
 /*! \brief   String sending function.
  *
@@ -22,7 +21,7 @@ using namespace std;
  *
  *  \param   message  String type message.
  * */
-void send_string(int sockfd, const string &message) {
+void send_string(int sockfd, std::string message) {
     char buffer[256];
     memset(&buffer, 0, sizeof(buffer));
     strcpy(buffer, message.c_str());
@@ -41,7 +40,7 @@ void send_string(int sockfd, const string &message) {
  *
  *  \return  Accepted string.
  * */
-string receive_string(int sockfd) {
+std::string receive_string(int sockfd) {
     char buffer[256];
     memset(&buffer, 0, sizeof(buffer));
     size_t res = recv(sockfd, (char*) &buffer, sizeof(buffer), 0);
@@ -49,7 +48,7 @@ string receive_string(int sockfd) {
         perror("Receiving error");
         exit(-1);
     }
-    string message = string(buffer);
+    std::string message = std::string(buffer);
     return message;
 }
 

@@ -9,13 +9,11 @@
 #define INTERACTIONS_H
 
 #include <string>
-using namespace std;
 const int NO_PROTOCOL = 0;
-const int TRUE = 1;
 
-void send_string(int sockfd, const string &message);
+void send_string(int sockfd, std::string message);
 
-string receive_string(int sockfd);
+std::string receive_string(int sockfd);
 
 int Socket(int domain, int type, int protocol);
 
