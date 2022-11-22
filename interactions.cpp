@@ -9,9 +9,10 @@
 #include <cstdlib>
 #include <arpa/inet.h>
 #include <cstring>
-#include "interactions.hpp"
 #include <string>
+#include "interactions.hpp"
 
+const int BUFFER_SIZE = 256;
 
 /*! \brief   String sending function.
  *
@@ -22,13 +23,13 @@
  *  \param   message  String type message.
  * */
 void send_string(int sockfd, std::string message) {
-    char buffer[256];
+    char buffer[BUFFER_SIZE];
     memset(&buffer, 0, sizeof(buffer));
     strcpy(buffer, message.c_str());
     size_t res = send(sockfd, (char*) &buffer, strlen(buffer), 0);
-    if (res == -1) {
+    if (res == EXIT_FAIL) {
         perror("Message sending error");
-        exit(-1);
+        exit(EXIT_FAIL);
     }
 }
 
@@ -41,12 +42,18 @@ void send_string(int sockfd, std::string message) {
  *  \return  Accepted string.
  * */
 std::string receive_string(int sockfd) {
-    char buffer[256];
+    char buffer[BUFFER_SIZE];
     memset(&buffer, 0, sizeof(buffer));
     size_t res = recv(sockfd, (char*) &buffer, sizeof(buffer), 0);
-    if (res == -1) {
-        perror("Receiving error");
-        exit(-1);
+    if (res == EXIT_FAIL) {
+        if (errno == EINTR) {
+            return "logout";
+        }
+        else {
+            perror("Receiving error");
+            exit(EXIT_FAIL);
+        }
+
     }
     std::string message = std::string(buffer);
     return message;
@@ -66,9 +73,9 @@ std::string receive_string(int sockfd) {
  * */
 int Socket(int domain, int type, int protocol) {
     int res = socket(domain, type, protocol);
-    if (res == -1) {
+    if (res == EXIT_FAIL) {
         perror("Socket failed");
-        exit(-1);
+        exit(EXIT_FAIL);
     }
     return res;
 }
@@ -86,9 +93,9 @@ int Socket(int domain, int type, int protocol) {
  * */
 void Bind(int sockfd, const struct sockaddr* addr, socklen_t addrlen) {
     int res = bind(sockfd, addr, addrlen);
-    if (res == -1) {
+    if (res == EXIT_FAIL) {
         perror("Bind failed");
-        exit(-1);
+        exit(EXIT_FAIL);
     }
 }
 
@@ -105,9 +112,9 @@ void Bind(int sockfd, const struct sockaddr* addr, socklen_t addrlen) {
 void Connect(int sockfd, const struct sockaddr* addr,
              socklen_t addrlen) {
     int res = connect(sockfd, addr, addrlen);
-    if (res == -1) {
+    if (res == EXIT_FAIL) {
         perror("Connection failed");
-        exit(-1);
+        exit(EXIT_FAIL);
     }
 }
 
@@ -125,6 +132,6 @@ void Inet_pton(int af, const char* __restrict src, void* __restrict dst) {
     int res = inet_pton(af, src, dst);
     if (res != 1) {
         perror("Address is not supported");
-        exit(-1);
+        exit(EXIT_FAIL);
     }
 }

@@ -9,6 +9,8 @@
 #define INTERACTIONS_H
 
 #include <string>
+
+const int EXIT_FAIL = -1;
 const int NO_PROTOCOL = 0;
 
 void send_string(int sockfd, std::string message);

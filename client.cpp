@@ -20,7 +20,7 @@ const int MIN_ARGS = 3;
 int main(int argc, char* argv[]) {
     if (argc != MIN_ARGS) {
         std::cout << "Usage: <IP-adress> <Port>\nExample: 127.0.0.1 8080\n";
-        return -1;
+        return EXIT_FAIL;
     }
     char* ip = argv[1];
     int port = atoi(argv[2]);
@@ -38,31 +38,39 @@ int main(int argc, char* argv[]) {
 
     std::cout << "Login:\n>";
     std::string login;
-    std::cin >> login;
+    getline(std::cin, login);
     send_string(client, login);
 
     std::cout << "Password:\n>";
     std::string password;
-    std::cin >> password;
+    getline(std::cin, password);
     send_string(client, password);
 
     std::cout << "Enter the command:\n";
     std::string command;
     std::string calc_res;
+    std::string expr;
     while (true) {
         std::cout << ">";
-        std::cin >> command;
+        getline(std::cin, command);
         if (command == "logout") {
             send_string(client, command);
             break;
-        } else if (command == "calc") {
-            std::string expr;
+        }
+        else if (command == "calc") {
             std::cout << "Enter the expression to calculate:\n>";
-            std::cin >> expr;
+            getline(std::cin, expr);
             send_string(client, expr);
             calc_res = receive_string(client);
             std::cout << calc_res << "\n";
-            break;
+        }
+        else if (command == "help") {
+            std::cout << "Commands:\n"
+                         "calc - Calculate an expression\n"
+                         "logout - Logout and disconnect from server\n";
+        }
+        else {
+            std::cout << "Unknown command, type 'help'\n";
         }
     }
     close(client);

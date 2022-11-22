@@ -25,10 +25,12 @@ std::vector<std::string> split(std::string str, char sep) {
     for (char i: str) {
         if (i != sep && !pivot) {
             part1 += i;
-        } else if (i == sep) {
+        }
+        else if (i == sep) {
             string_vector.push_back(part1);
             pivot = true;
-        } else if (i != sep && pivot) {
+        }
+        else if (i != sep && pivot) {
             part2 += i;
         }
     }
@@ -51,19 +53,23 @@ float calculate(std::string expression) {
         num1 = atof(split(expression, '+')[0].c_str());
         num2 = atof(split(expression, '+')[1].c_str());
         res = num1 + num2;
-    } else if (strstr(expression.c_str(), "-")) {
+    }
+    else if (strstr(expression.c_str(), "-")) {
         num1 = atof(split(expression, '-')[0].c_str());
         num2 = atof(split(expression, '-')[1].c_str());
         res = num1 - num2;
-    } else if (strstr(expression.c_str(), "*")) {
+    }
+    else if (strstr(expression.c_str(), "*")) {
         num1 = atof(split(expression, '*')[0].c_str());
         num2 = atof(split(expression, '*')[1].c_str());
         res = num1 * num2;
-    } else if (strstr(expression.c_str(), "/")) {
+    }
+    else if (strstr(expression.c_str(), "/")) {
         num1 = atof(split(expression, '/')[0].c_str());
         num2 = atof(split(expression, '/')[1].c_str());
         res = num1 / num2;
-    } else {
+    }
+    else {
         res = CALC_FAIL;
     }
     return res;
