@@ -93,7 +93,7 @@ int main(int argc, char* argv[]) {
         std::string password = receive_string(new_socket);
         std::cout << login << " " << password << "\n";
         stop_timer(server);
-        std::ifstream input("login_db.txt");
+        std::ifstream input("../login_db.txt");
         if (!input) {
             std::cout << "Error opening login file\n";
             return EXIT_FAIL;
