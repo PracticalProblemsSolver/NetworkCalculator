@@ -46,6 +46,15 @@ int main(int argc, char* argv[]) {
     getline(std::cin, password);
     send_string(client, password);
 
+    std::string response = receive_string(client);
+    if (response == INVALID_INPUT) {
+        std::cout << INVALID_INPUT << "\n";
+        close(client);
+        return EXIT_FAIL;
+    }
+    else if (response == AUTH_SUCCESS) {
+        std::cout << AUTH_SUCCESS << "\n";
+    }
     std::cout << "Enter the command:\n";
     std::string command;
     std::string calc_res;

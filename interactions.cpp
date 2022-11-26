@@ -11,7 +11,6 @@
 #include <cstring>
 #include <string>
 #include "interactions.hpp"
-
 const int BUFFER_SIZE = 256;
 
 /*! \brief   String sending function.

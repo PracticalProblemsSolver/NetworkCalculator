@@ -5,13 +5,26 @@
 #include <cstdlib>
 #include <unistd.h>
 #include <sys/time.h>
+#include <pqxx/pqxx>
+#include <fstream>
 #include "interactions.hpp"
 #include "calc.hpp"
 #include "handling.hpp"
 
 const int MIN_ARGS = 2;
 const int MAX_CONNECTIONS = 10;
+const int RESPONCE_TIMEOUT = 15;
+void stop_timer(int sockfd) {
+    int wait_time = 0;
+    struct itimerval timer = handle_signals(sockfd, wait_time);
+    Setitimer(ITIMER_REAL, &timer, nullptr);
+}
 
+void invalid_input(int newsockfd) {
+    send_string(newsockfd, INVALID_INPUT);
+    std::cout << "Client disconnected: " << INVALID_INPUT << "\n";
+    close(newsockfd);
+}
 
 /*! \brief   Server main function.
  *
@@ -34,11 +47,11 @@ int main(int argc, char* argv[]) {
     adr.sin_port = htons(port);
     Bind(server, (const struct sockaddr*) &adr,
          sizeof adr);
-
+    std::cout << "Server started\n";
 
     sockaddr_in new_adr{0};
     auto size = (socklen_t) sizeof(new_adr);
-    int wait_time = 10;
+    int wait_time = RESPONCE_TIMEOUT;
     int new_socket;
     while (true) {
         listen(server, MAX_CONNECTIONS);
@@ -57,12 +70,47 @@ int main(int argc, char* argv[]) {
         std::string login = receive_string(new_socket);
         std::string password = receive_string(new_socket);
         std::cout << login << " " << password << "\n";
+        stop_timer(server);
+        std::ifstream input("login_db.txt");
+        if (!input) {
+            std::cout << "Error opening login file\n";
+            return EXIT_FAIL;
+        }
+        std::vector<std::string> db_user;
+        while (!input.eof()) {
+            std::string line;
+            getline(input, line);
+            db_user.push_back(line);
+        }
 
-        wait_time = 0;
-        timer = handle_signals(server, wait_time);
-        Setitimer(ITIMER_REAL, &timer, nullptr);
+        std::string connection =
+                "host=localhost port=5432 dbname=cscalc"
+                " user=" + db_user[0] +
+                " password=" + db_user[1];
+//        try {
+        pqxx::connection connectionObject(connection.c_str());
+        pqxx::work worker(connectionObject);
+//        }
+//        catch (const std::exception &e) {
+//            std::cerr << e.what() << "\n";
+//            close(server);
+//            close(new_socket);
+//            return EXIT_FAIL;
+//        }
+        std::string query = "SELECT password FROM users "
+                            "WHERE login = '" + login + "'";
+        pqxx::result response = worker.exec(query);
+        if (response.empty()) {
+            invalid_input(new_socket);
+            continue;
+        }
+
+        send_string(new_socket, AUTH_SUCCESS);
+
+        std::cout << response[0][0] << " is the password\n";
         std::string message;
         float calc_res;
+
         while (true) {
             message = receive_string(new_socket);
             if (message == "logout") {

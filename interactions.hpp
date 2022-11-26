@@ -12,6 +12,8 @@
 
 const int EXIT_FAIL = -1;
 const int NO_PROTOCOL = 0;
+const std::string INVALID_INPUT = "Invalid username or password";
+const std::string AUTH_SUCCESS = "Authentication successful";
 
 void send_string(int sockfd, std::string message);
 
