@@ -38,3 +38,4 @@ Examples:
 ./server.o 1234
 ./client 127.0.0.1 1234
 ```
+Client has two commands - calc and logout. Calc command is purposed for doing simple calculations with two numbers and one operation(+-*/). Logout disconnects client from server.
