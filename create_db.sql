@@ -11,6 +11,6 @@ CREATE TABLE IF NOT EXISTS users(id serial not null,
 TRUNCATE TABLE users;
 
 INSERT INTO users VALUES
-                      (1, 'user', 'user', 2),
-                      (2, 'admin', 'admin', 3);
+                      (1, 'user', 'password', 2),
+                      (2, 'admin', '123', 3);
 

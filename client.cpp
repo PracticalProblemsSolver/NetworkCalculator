@@ -1,9 +1,15 @@
+/*! \file    client.cpp
+ *
+ *  \brief   Client app.
+ *
+ *  \details Starts a client that connects to a server.
+ */
 #include <iostream>
 #include <arpa/inet.h>
 #include <netdb.h>
 #include <sys/socket.h>
 #include <unistd.h>
-#include "interactions.hpp"
+#include "functions/interactions.hpp"
 
 const int MIN_ARGS = 3;
 
@@ -55,12 +61,11 @@ int main(int argc, char* argv[]) {
     else if (response == AUTH_SUCCESS) {
         std::cout << AUTH_SUCCESS << "\n";
     }
-    std::cout << "Enter the command:\n";
     std::string command;
     std::string calc_res;
     std::string expr;
     while (true) {
-        std::cout << ">";
+        std::cout << "Enter the command:\n>";
         getline(std::cin, command);
         if (command == "logout") {
             send_string(client, command);
@@ -72,6 +77,9 @@ int main(int argc, char* argv[]) {
             send_string(client, expr);
             calc_res = receive_string(client);
             std::cout << calc_res << "\n";
+            if (calc_res == BALANCE_OVER) {
+                break;
+            }
         }
         else if (command == "help") {
             std::cout << "Commands:\n"

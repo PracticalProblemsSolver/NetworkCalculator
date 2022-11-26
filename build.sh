@@ -1,2 +1,2 @@
-g++ client.cpp interactions.cpp calc.cpp handling.cpp -o client.o
-g++ server.cpp interactions.cpp calc.cpp handling.cpp -o server.o -lpqxx -lpq
+g++ client.cpp functions/interactions.cpp functions/calc.cpp functions/handling.cpp -o client.o
+g++ server.cpp functions/interactions.cpp functions/calc.cpp functions/handling.cpp -o server.o -lpqxx -lpq

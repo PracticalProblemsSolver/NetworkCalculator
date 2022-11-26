@@ -1,3 +1,10 @@
+/*! \file    server.cpp
+ *
+ *  \brief   Server app.
+ *
+ *  \details Starts a server that accepts connections
+ *           from clients.
+ */
 #include <iostream>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -7,22 +14,37 @@
 #include <sys/time.h>
 #include <pqxx/pqxx>
 #include <fstream>
-#include "interactions.hpp"
-#include "calc.hpp"
-#include "handling.hpp"
+#include "functions/interactions.hpp"
+#include "functions/calc.hpp"
+#include "functions/handling.hpp"
 
 const int MIN_ARGS = 2;
 const int MAX_CONNECTIONS = 10;
-const int RESPONCE_TIMEOUT = 15;
+const int RESPONSE_TIMEOUT = 15;
+
+/*! \brief   Timer stop function.
+ *
+ *  \details Stops timer on given socket.
+ *
+ *  \param   sockfd Socket descriptor.
+ * */
 void stop_timer(int sockfd) {
     int wait_time = 0;
     struct itimerval timer = handle_signals(sockfd, wait_time);
     Setitimer(ITIMER_REAL, &timer, nullptr);
 }
 
-void invalid_input(int newsockfd) {
-    send_string(newsockfd, INVALID_INPUT);
-    std::cout << "Client disconnected: " << INVALID_INPUT << "\n";
+/*! \brief   Client disconnect function.
+ *
+ *  \details Disconnects client and sends disconnect reason.
+ *
+ *  \param   newsockfd Client socket.
+ *
+ *  \param   reason    Disconnect reason string.
+ * */
+void disconnect_client(int newsockfd, std::string reason) {
+    send_string(newsockfd, reason);
+    std::cout << "Client disconnected: " << reason << "\n";
     close(newsockfd);
 }
 
@@ -51,7 +73,7 @@ int main(int argc, char* argv[]) {
 
     sockaddr_in new_adr{0};
     auto size = (socklen_t) sizeof(new_adr);
-    int wait_time = RESPONCE_TIMEOUT;
+    int wait_time = RESPONSE_TIMEOUT;
     int new_socket;
     while (true) {
         listen(server, MAX_CONNECTIONS);
@@ -97,19 +119,23 @@ int main(int argc, char* argv[]) {
 //            close(new_socket);
 //            return EXIT_FAIL;
 //        }
-        std::string query = "SELECT password FROM users "
-                            "WHERE login = '" + login + "'";
+        std::string query = "SELECT password, balance FROM users "
+                            "WHERE login = " + worker.quote(login);
         pqxx::result response = worker.exec(query);
-        if (response.empty()) {
-            invalid_input(new_socket);
+        worker.commit();
+        std::string db_password = to_string(response[0][0]);
+        int db_balance = std::stoi(to_string(response[0][1]));
+        std::cout << db_balance << "\n";
+        if (response.empty() || to_string(response[0][0]) != password) {
+            disconnect_client(new_socket, INVALID_INPUT);
             continue;
         }
-
         send_string(new_socket, AUTH_SUCCESS);
-
-        std::cout << response[0][0] << " is the password\n";
         std::string message;
         float calc_res;
+        std::string update = "UPDATE users "
+                             "SET balance = balance - 1 "
+                             "WHERE login = " + worker.quote(login);
 
         while (true) {
             message = receive_string(new_socket);
@@ -117,12 +143,20 @@ int main(int argc, char* argv[]) {
                 close(new_socket);
                 break;
             }
+            if (db_balance < 1) {
+                disconnect_client(new_socket, BALANCE_OVER);
+                break;
+            }
             calc_res = calculate(message);
             if (calc_res == CALC_FAIL) {
                 message = "Invalid input";
             }
             else {
+                db_balance--;
+                pqxx::work updater(connectionObject);
                 message = std::to_string(calc_res);
+                updater.exec0(update);
+                updater.commit();
             }
             send_string(new_socket, message);
         }
